@@ -16,8 +16,7 @@ const pool = new pg.Pool({
 });
 
 // TODO 1 · Permisos: las únicas tablas que el LLM puede ver y consultar.
-//          Agrega "productos" y "pedidos". "salarios" NO debe estar aquí.
-const TABLAS_PERMITIDAS = [];
+const TABLAS_PERMITIDAS = ["productos", "pedidos"];
 
 const ok = (datos) => ({ content: [{ type: "text", text: JSON.stringify(datos, null, 2) }] });
 const error = (mensaje) => ({ content: [{ type: "text", text: mensaje }], isError: true });
@@ -62,10 +61,12 @@ server.registerTool(
   },
   async ({ tabla }) => {
     // TODO 2 · Introspección: validar la tabla y devolver sus columnas.
-    //   1. Llama validarTabla(tabla): lanza un error si la tabla no está permitida.
-    //   2. Devuelve ok(await columnasDe(tabla)).
-    //   3. Si algo falla, devuelve error(e.message) para que el LLM entienda por qué.
-    return error("TODO 2: describe_table aún no está implementada.");
+    try {
+      validarTabla(tabla);
+      return ok(await columnasDe(tabla));
+    } catch (e) {
+      return error(e.message);
+    }
   },
 );
 
@@ -84,15 +85,30 @@ server.registerTool(
   },
   async ({ tabla, filtros = {}, limite }) => {
     // TODO 3 · Consulta segura: el LLM nunca escribe SQL; nosotros lo armamos.
-    //   1. Valida la tabla con validarTabla(tabla).
-    //   2. Comprueba que cada clave de `filtros` sea una columna real (usa columnasDe).
-    //      Si no lo es, devuelve un error: así nadie cuela SQL en el nombre de la columna.
-    //   3. Arma el SQL con parámetros, NUNCA concatenando valores. Por ejemplo, para
-    //      { categoria: "audio" } con limite 20:
-    //        sql     = 'SELECT * FROM "productos" WHERE "categoria" = $1 LIMIT $2'
-    //        valores = ["audio", 20]
-    //   4. Ejecuta pool.query(sql, valores) y devuelve ok(rows).
-    return error("TODO 3: query aún no está implementada.");
+    try {
+      validarTabla(tabla);
+
+      // Solo se puede filtrar por columnas que existen de verdad.
+      const columnas = (await columnasDe(tabla)).map((c) => c.columna);
+      for (const columna of Object.keys(filtros)) {
+        if (!columnas.includes(columna)) {
+          return error(`La columna "${columna}" no existe en "${tabla}". Columnas: ${columnas.join(", ")}.`);
+        }
+      }
+
+      // Los valores van como parámetros ($1, $2...), nunca concatenados: así no hay inyección SQL.
+      const valores = Object.values(filtros);
+      const where = Object.keys(filtros).map((columna, i) => `"${columna}" = $${i + 1}`);
+      const sql =
+        `SELECT * FROM "${tabla}"` +
+        (where.length ? ` WHERE ${where.join(" AND ")}` : "") +
+        ` LIMIT $${valores.length + 1}`;
+
+      const { rows } = await pool.query(sql, [...valores, limite]);
+      return ok(rows);
+    } catch (e) {
+      return error(e.message);
+    }
   },
 );
 

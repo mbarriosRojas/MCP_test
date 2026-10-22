@@ -15,8 +15,7 @@ if (!uri) {
 const db = new MongoClient(uri).db("tienda");
 
 // TODO 1 · Permisos: las únicas colecciones que el LLM puede ver y consultar.
-//          Agrega "productos" y "pedidos". "salarios" NO debe estar aquí.
-const COLECCIONES_PERMITIDAS = [];
+const COLECCIONES_PERMITIDAS = ["productos", "pedidos"];
 
 const ok = (datos) => ({ content: [{ type: "text", text: JSON.stringify(datos, null, 2) }] });
 const error = (mensaje) => ({ content: [{ type: "text", text: mensaje }], isError: true });
@@ -56,10 +55,12 @@ server.registerTool(
   },
   async ({ coleccion }) => {
     // TODO 2 · Introspección: validar la colección y devolver sus campos.
-    //   1. Llama validarColeccion(coleccion): lanza un error si no está permitida.
-    //   2. Devuelve ok(await camposDe(coleccion)).
-    //   3. Si algo falla, devuelve error(e.message) para que el LLM entienda por qué.
-    return error("TODO 2: describe_collection aún no está implementada.");
+    try {
+      validarColeccion(coleccion);
+      return ok(await camposDe(coleccion));
+    } catch (e) {
+      return error(e.message);
+    }
   },
 );
 
@@ -78,12 +79,25 @@ server.registerTool(
   },
   async ({ coleccion, filtros = {}, limite }) => {
     // TODO 3 · Consulta segura: nada de operadores ($where, $ne, $gt...) que cambien el sentido del filtro.
-    //   1. Valida la colección con validarColeccion(coleccion).
-    //   2. Rechaza cualquier campo de `filtros` que empiece por "$" (ej. { "$where": "..." }).
-    //      Los valores ya llegan como texto, número o booleano: el inputSchema bloquea { "$ne": null }.
-    //   3. Ejecuta db.collection(coleccion).find(filtros, { projection: { _id: 0 } })
-    //      .limit(limite).toArray() y devuelve ok(documentos).
-    return error("TODO 3: find aún no está implementada.");
+    try {
+      validarColeccion(coleccion);
+
+      // Solo valores simples (lo garantiza el inputSchema) y ningún campo que empiece por "$".
+      for (const campo of Object.keys(filtros)) {
+        if (campo.startsWith("$")) {
+          return error(`Filtro no permitido: "${campo}". Solo se aceptan igualdades campo = valor.`);
+        }
+      }
+
+      const documentos = await db
+        .collection(coleccion)
+        .find(filtros, { projection: { _id: 0 } })
+        .limit(limite)
+        .toArray();
+      return ok(documentos);
+    } catch (e) {
+      return error(e.message);
+    }
   },
 );
 
