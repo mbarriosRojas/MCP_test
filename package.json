@@ -1,0 +1,21 @@
+{
+  "name": "mcp-workshop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Taller Sesión 03: servidor MCP que deja a un LLM consultar una base de datos de forma segura",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "pg:up": "docker compose -f postgres/docker-compose.yml up -d",
+    "pg:down": "docker compose -f postgres/docker-compose.yml down -v",
+    "mongo:seed": "node mongo/seed.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "mongodb": "^7.7.0",
+    "pg": "^8.23.1",
+    "zod": "^4.6.7"
+  }
+}

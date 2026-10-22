@@ -1,0 +1,11 @@
+services:
+  db:
+    build: .
+    container_name: mcp-taller-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tienda
+    ports:
+      # 5444 para no chocar con un Postgres que ya tengas en el 5432
+      - "5444:5432"
