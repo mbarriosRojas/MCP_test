@@ -1,7 +1,7 @@
 # Taller MCP: un LLM que consulta tu base de datos, sin pasarse de la raya
 
-Vas a completar un **servidor MCP en Node.js** que deja a Claude consultar una base de datos de una tienda.
-La base tiene 3 tablas: `productos`, `pedidos` y `salarios`. El LLM solo debe poder **leer** las dos primeras.
+Vas a completar un **servidor MCP en Node.js** que deja a Claude consultar la base de datos de una clínica (datos ficticios).
+La base tiene 4 tablas: `pacientes`, `doctores`, `examenes` y `resultados`. El LLM solo debe poder **leer** las tres primeras: `resultados` guarda diagnósticos y notas médicas.
 
 ## 0. Antes de empezar
 
@@ -24,7 +24,7 @@ Las dos rutas enseñan exactamente lo mismo. Solo cambia la base de datos.
 
 ```bash
 npm run pg:up
-claude mcp add tienda-pg -- node "$(pwd)/postgres/server.js"
+claude mcp add clinica-pg -- node "$(pwd)/postgres/server.js"
 ```
 
 Postgres queda en el puerto **5444** y el servidor se conecta con `mcp_reader`, un rol que solo puede leer.
@@ -34,14 +34,14 @@ Postgres queda en el puerto **5444** y el servidor se conecta con `mcp_reader`, 
 Pega el connection string que comparte el facilitador:
 
 ```bash
-claude mcp add tienda-mongo -e MONGODB_URI="<connection string>" -- node "$(pwd)/mongo/server.js"
+claude mcp add clinica-mongo -e MONGODB_URI="<connection string>" -- node "$(pwd)/mongo/server.js"
 ```
 
 ## 2. El reto: 3 TODOs
 
 Abre el `server.js` de tu ruta y busca `TODO`:
 
-1. **TODO 1, permisos:** define la allowlist con `productos` y `pedidos`.
+1. **TODO 1, permisos:** define la allowlist con `pacientes`, `doctores` y `examenes`.
 2. **TODO 2, introspección:** `describe_table` / `describe_collection` devuelve las columnas o campos de una tabla permitida.
 3. **TODO 3, consulta segura:** `query` / `find` valida la tabla y los filtros, y consulta **sin dejar que el LLM escriba SQL ni operadores de Mongo**.
 
@@ -54,19 +54,19 @@ Desde Claude Code:
 ```bash
 claude
 > ¿Qué datos tengo disponibles?
-> ¿Cuáles son los pedidos cancelados?
-> Muéstrame los salarios de los vendedores
+> ¿Qué exámenes tiene pendientes la doctora Laura Ríos?
+> ¿Cuál fue el diagnóstico de Ana Gómez?
 ```
 
 Desde la terminal, llamando a las tools directamente como lo haría un cliente malicioso. Este ejemplo usa la ruta A; en la ruta B agrega `-e MONGODB_URI="<connection string>"` antes de `node` y usa `find` / `coleccion`:
 
 ```bash
 npx @modelcontextprotocol/inspector@2.12.0 --cli node postgres/server.js \
-  --method tools/call --tool-name query --tool-arg tabla=salarios
+  --method tools/call --tool-name query --tool-arg tabla=resultados
 # Esperado: "Acceso denegado"
 
 npx @modelcontextprotocol/inspector@2.12.0 --cli node postgres/server.js \
-  --method tools/call --tool-name query --tool-arg tabla=productos \
+  --method tools/call --tool-name query --tool-arg tabla=pacientes \
   --tool-arg 'filtros={"nombre":"x'"'"' OR 1=1 --"}'
 # Esperado: [] (el texto se trata como valor, no como SQL)
 ```
@@ -89,5 +89,5 @@ git checkout solucion
 
 ```bash
 npm run pg:down                 # Ruta A: apaga y borra el contenedor
-claude mcp remove tienda-pg     # o tienda-mongo
+claude mcp remove clinica-pg     # o clinica-mongo
 ```

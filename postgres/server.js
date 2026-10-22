@@ -12,11 +12,11 @@ pg.types.setTypeParser(pg.types.builtins.DATE, (valor) => valor);
 // Nos conectamos con mcp_reader: un rol que solo puede LEER (ver seed.sql).
 const pool = new pg.Pool({
   connectionString:
-    process.env.DATABASE_URL ?? "postgres://mcp_reader:mcp_reader@localhost:5444/tienda",
+    process.env.DATABASE_URL ?? "postgres://mcp_reader:mcp_reader@localhost:5444/taller",
 });
 
 // TODO 1 · Permisos: las únicas tablas que el LLM puede ver y consultar.
-//          Agrega "productos" y "pedidos". "salarios" NO debe estar aquí.
+//          Agrega "pacientes", "doctores" y "examenes". "resultados" NO debe estar aquí.
 const TABLAS_PERMITIDAS = [];
 
 const ok = (datos) => ({ content: [{ type: "text", text: JSON.stringify(datos, null, 2) }] });
@@ -42,7 +42,7 @@ async function columnasDe(tabla) {
   return rows;
 }
 
-const server = new McpServer({ name: "tienda-postgres", version: "1.0.0" });
+const server = new McpServer({ name: "clinica-postgres", version: "1.0.0" });
 
 server.registerTool(
   "list_tables",
@@ -74,7 +74,7 @@ server.registerTool(
   {
     description:
       "Consulta registros de una tabla permitida. Los filtros son igualdades exactas " +
-      '(ej. { "estado": "entregado" }). No acepta SQL libre.',
+      '(ej. { "estado": "pendiente" }). No acepta SQL libre.',
     inputSchema: {
       tabla: z.string(),
       filtros: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
@@ -88,9 +88,9 @@ server.registerTool(
     //   2. Comprueba que cada clave de `filtros` sea una columna real (usa columnasDe).
     //      Si no lo es, devuelve un error: así nadie cuela SQL en el nombre de la columna.
     //   3. Arma el SQL con parámetros, NUNCA concatenando valores. Por ejemplo, para
-    //      { categoria: "audio" } con limite 20:
-    //        sql     = 'SELECT * FROM "productos" WHERE "categoria" = $1 LIMIT $2'
-    //        valores = ["audio", 20]
+    //      { estado: "pendiente" } con limite 20:
+    //        sql     = 'SELECT * FROM "examenes" WHERE "estado" = $1 LIMIT $2'
+    //        valores = ["pendiente", 20]
     //   4. Ejecuta pool.query(sql, valores) y devuelve ok(rows).
     return error("TODO 3: query aún no está implementada.");
   },

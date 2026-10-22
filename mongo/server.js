@@ -15,7 +15,7 @@ if (!uri) {
 const db = new MongoClient(uri).db("taller");
 
 // TODO 1 · Permisos: las únicas colecciones que el LLM puede ver y consultar.
-//          Agrega "productos" y "pedidos". "salarios" NO debe estar aquí.
+//          Agrega "pacientes", "doctores" y "examenes". "resultados" NO debe estar aquí.
 const COLECCIONES_PERMITIDAS = [];
 
 const ok = (datos) => ({ content: [{ type: "text", text: JSON.stringify(datos, null, 2) }] });
@@ -36,7 +36,7 @@ async function camposDe(coleccion) {
   return Object.entries(ejemplo ?? {}).map(([campo, valor]) => ({ campo, tipo: typeof valor }));
 }
 
-const server = new McpServer({ name: "tienda-mongo", version: "1.0.0" });
+const server = new McpServer({ name: "clinica-mongo", version: "1.0.0" });
 
 server.registerTool(
   "list_collections",
@@ -68,7 +68,7 @@ server.registerTool(
   {
     description:
       "Consulta documentos de una colección permitida. Los filtros son igualdades exactas " +
-      '(ej. { "estado": "entregado" }). No acepta operadores de Mongo.',
+      '(ej. { "estado": "pendiente" }). No acepta operadores de Mongo.',
     inputSchema: {
       coleccion: z.string(),
       filtros: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
