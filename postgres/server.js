@@ -12,11 +12,11 @@ pg.types.setTypeParser(pg.types.builtins.DATE, (valor) => valor);
 // Nos conectamos con mcp_reader: un rol que solo puede LEER (ver seed.sql).
 const pool = new pg.Pool({
   connectionString:
-    process.env.DATABASE_URL ?? "postgres://mcp_reader:mcp_reader@localhost:5444/tienda",
+    process.env.DATABASE_URL ?? "postgres://mcp_reader:mcp_reader@localhost:5444/taller",
 });
 
 // TODO 1 · Permisos: las únicas tablas que el LLM puede ver y consultar.
-const TABLAS_PERMITIDAS = ["productos", "pedidos"];
+const TABLAS_PERMITIDAS = ["pacientes", "doctores", "examenes"];
 
 const ok = (datos) => ({ content: [{ type: "text", text: JSON.stringify(datos, null, 2) }] });
 const error = (mensaje) => ({ content: [{ type: "text", text: mensaje }], isError: true });
@@ -41,7 +41,7 @@ async function columnasDe(tabla) {
   return rows;
 }
 
-const server = new McpServer({ name: "tienda-postgres", version: "1.0.0" });
+const server = new McpServer({ name: "clinica-postgres", version: "1.0.0" });
 
 server.registerTool(
   "list_tables",
@@ -75,7 +75,7 @@ server.registerTool(
   {
     description:
       "Consulta registros de una tabla permitida. Los filtros son igualdades exactas " +
-      '(ej. { "estado": "entregado" }). No acepta SQL libre.',
+      '(ej. { "estado": "pendiente" }). No acepta SQL libre.',
     inputSchema: {
       tabla: z.string(),
       filtros: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),

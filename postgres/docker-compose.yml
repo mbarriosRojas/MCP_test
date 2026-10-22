@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: tienda
+      POSTGRES_DB: taller
     ports:
       # 5444 para no chocar con un Postgres que ya tengas en el 5432
       - "5444:5432"
