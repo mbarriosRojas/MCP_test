@@ -12,7 +12,7 @@ if (!uri) {
   console.error("Falta MONGODB_URI. Pásalo al registrar el servidor (ver README).");
   process.exit(1);
 }
-const db = new MongoClient(uri).db("tienda");
+const db = new MongoClient(uri).db("taller");
 
 // TODO 1 · Permisos: las únicas colecciones que el LLM puede ver y consultar.
 const COLECCIONES_PERMITIDAS = ["productos", "pedidos"];

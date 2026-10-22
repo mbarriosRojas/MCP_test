@@ -43,7 +43,7 @@ const salarios = [
 ];
 
 const client = new MongoClient(uri);
-const db = client.db("tienda");
+const db = client.db("taller");
 for (const [nombre, documentos] of Object.entries({ productos, pedidos, salarios })) {
   await db.collection(nombre).deleteMany({});
   await db.collection(nombre).insertMany(documentos);
