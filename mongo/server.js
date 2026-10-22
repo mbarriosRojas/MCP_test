@@ -6,12 +6,12 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { MongoClient } from "mongodb";
 
-// El connection string compartido usa un usuario de Atlas con rol "read": solo puede LEER.
-const uri = process.env.MONGODB_URI;
-if (!uri) {
-  console.error("Falta MONGODB_URI. Pásalo al registrar el servidor (ver README).");
-  process.exit(1);
-}
+// Cluster de pruebas del taller (datos ficticios), para que solo tengas que clonar y usar.
+// En un proyecto real esta credencial NO va en el código: va en una variable de entorno
+// y es de un usuario con rol "read". Puedes usar la tuya con MONGODB_URI.
+const uri =
+  process.env.MONGODB_URI ??
+  "mongodb+srv://maudev_test:curromino2026@cluster0.shuxina.mongodb.net";
 const db = new MongoClient(uri).db("taller");
 
 // TODO 1 · Permisos: las únicas colecciones que el LLM puede ver y consultar.

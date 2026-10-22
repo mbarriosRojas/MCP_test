@@ -17,7 +17,7 @@ Las dos rutas enseñan exactamente lo mismo. Solo cambia la base de datos.
 
 | | Ruta A: PostgreSQL | Ruta B: MongoDB Atlas |
 | --- | --- | --- |
-| Necesitas | Docker | Nada más (el facilitador comparte la conexión) |
+| Necesitas | Docker | Nada más: la conexión viene en el repo |
 | Archivo a completar | `postgres/server.js` | `mongo/server.js` |
 
 ### Ruta A: PostgreSQL
@@ -31,10 +31,10 @@ Postgres queda en el puerto **5444** y el servidor se conecta con `mcp_reader`, 
 
 ### Ruta B: MongoDB Atlas
 
-Pega el connection string que comparte el facilitador:
+La conexión al cluster de pruebas ya viene en `mongo/server.js`:
 
 ```bash
-claude mcp add clinica-mongo -e MONGODB_URI="<connection string>" -- node "$(pwd)/mongo/server.js"
+claude mcp add clinica-mongo -- node "$(pwd)/mongo/server.js"
 ```
 
 ## 2. El reto: 3 TODOs
@@ -58,7 +58,7 @@ claude
 > ¿Cuál fue el diagnóstico de Ana Gómez?
 ```
 
-Desde la terminal, llamando a las tools directamente como lo haría un cliente malicioso. Este ejemplo usa la ruta A; en la ruta B agrega `-e MONGODB_URI="<connection string>"` antes de `node` y usa `find` / `coleccion`:
+Desde la terminal, llamando a las tools directamente como lo haría un cliente malicioso. Este ejemplo usa la ruta A; en la ruta B usa `node mongo/server.js`, `find` y `coleccion`:
 
 ```bash
 npx @modelcontextprotocol/inspector@2.12.0 --cli node postgres/server.js \
